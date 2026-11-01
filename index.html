@@ -638,6 +638,49 @@
     #postures{gap:6px;}
     .btn-posture{min-height:40px;padding:6px 10px;}
   }
+
+  /* ---------- Les postures : trois petits boutons RONDS à pictogrammes ----------
+     (retour de Richard, 2026-11-01 : fini les grosses tuiles texte).
+     Trois bonhommes bâton blancs dessinés en SVG — un qui saute, un
+     qui se penche (accroupi, dos incliné, tête baissée), un qui rampe
+     (à plat ventre) — sur fond sombre semi-transparent, dans la même
+     colonne de gauche qu’avant, au-dessus du manche du regard et donc
+     sous le bouton Vue : la colonne est ancrée en bas, rien ne peut
+     recouvrir Vue, Son ou Réglages, ni aucun des deux manches.
+     Le bouton fait 44 × 44 px : c’est à la fois le visuel et la zone
+     tactile (≈ 44 px demandés). L’état ACTIF (la posture en cours)
+     se lit d’un coup d’œil : fond brun accent presque opaque, bordure
+     dorée et anneau doré autour du bouton. Le bandeau de sous-titres,
+     lui, continue d’annoncer chaque posture en toutes lettres. */
+  #postures{gap:8px;align-items:center;}
+  .btn-posture{
+    width:44px;height:44px;min-width:44px;min-height:44px;
+    border-radius:50%;
+    border:1.5px solid rgba(255,248,236,.5);
+    background:rgba(30,26,20,.55);
+    box-shadow:0 4px 12px rgba(20,14,8,.3);
+    padding:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .btn-posture svg{width:30px;height:30px;display:block;pointer-events:none;flex:none;}
+  .btn-posture:hover{background:rgba(30,26,20,.78);}
+  .btn-posture.actif{
+    background:rgba(138,90,43,.95);
+    border-color:#ffe1a8;
+    box-shadow:0 0 0 2.5px rgba(255,225,168,.6), 0 4px 12px rgba(20,14,8,.35);
+  }
+  /* Écrans courts (paysage téléphone, ~360-430 px de haut) : la
+     colonne de gauche se resserre pour que le haut du bouton
+     « Sauter » reste toujours sous le bas du bouton Vue. À 360 px
+     de haut : colonne = 3×44 + 2×4 (postures) + 4 (écart) + 148
+     (manche du regard) = 292 px, bas à 10 px du bord → le haut de
+     la colonne arrive à ~58 px, sous le bas de Vue (12 + 42 = 54 px).
+     Aucun chevauchement, chaque bouton reste touchable séparément. */
+  @media (max-height:480px){
+    #postures{gap:4px;}
+    .colonne-gauche{gap:4px;}
+    #tactile{padding-bottom:calc(10px + env(safe-area-inset-bottom));}
+  }
 </style>
 </head>
 <body>
@@ -731,9 +774,37 @@
   <div id="tactile">
     <div class="colonne-gauche">
       <div id="postures">
-        <button class="btn-posture" id="btn-sauter" type="button" aria-label="Sauter">Sauter</button>
-        <button class="btn-posture" id="btn-pencher" type="button" aria-pressed="false" aria-label="Se pencher ou se relever">Se pencher</button>
-        <button class="btn-posture" id="btn-allonger" type="button" aria-pressed="false" aria-label="Ramper ou se relever">Ramper</button>
+        <button class="btn-posture" id="btn-sauter" type="button" aria-label="Sauter">
+          <svg viewBox="0 0 32 32" fill="none" stroke="#fff8ec" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="17" cy="5.5" r="2.8"/>
+            <path d="M17 8.5 L16 16"/>
+            <path d="M16.6 10.5 L11 5"/>
+            <path d="M16.6 10.5 L22.5 4.5"/>
+            <path d="M16 16 L11.5 20 L13.5 24.5"/>
+            <path d="M16 16 L21 19.5 L24 17.5"/>
+            <path d="M6 28.5 H26" stroke-dasharray="3 3.5" opacity=".65"/>
+          </svg>
+        </button>
+        <button class="btn-posture" id="btn-pencher" type="button" aria-pressed="false" aria-label="Se pencher ou se relever">
+          <svg viewBox="0 0 32 32" fill="none" stroke="#fff8ec" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="22" cy="9" r="2.8"/>
+            <path d="M13 15 L19.8 11.2"/>
+            <path d="M19 12 L23 18 L23.5 22.5"/>
+            <path d="M13 15 L17 20 L17 26"/>
+            <path d="M13 15 L9.5 20 L10 26"/>
+            <path d="M6 28.5 H26" stroke-dasharray="3 3.5" opacity=".65"/>
+          </svg>
+        </button>
+        <button class="btn-posture" id="btn-allonger" type="button" aria-pressed="false" aria-label="Ramper ou se relever">
+          <svg viewBox="0 0 32 32" fill="none" stroke="#fff8ec" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="25.5" cy="12" r="2.8"/>
+            <path d="M22.6 14 L11 15.5"/>
+            <path d="M21 15 L19.5 20.5 L22 24.5"/>
+            <path d="M13 16 L15 21 L18.5 22"/>
+            <path d="M11 15.5 L6.5 18 L4 22.5"/>
+            <path d="M4 27 H28" stroke-dasharray="3 3.5" opacity=".65"/>
+          </svg>
+        </button>
       </div>
       <div class="colonne-manche">
         <div id="manche-regard" role="application" aria-label="Manche du regard : glissez le pouce pour regarder en haut, en bas, à gauche, à droite">
@@ -6416,7 +6487,14 @@ function dessinerPlan(){
   if (leg) leg.textContent = bruegel
     ? 'La géographie des « Chasseurs dans la neige », projetée des lieux réels du monde-tableau. Le point rouge, c’est vous.'
     : 'Les lieux réels de la vallée, vus d’en haut — le nord de la vallée est en haut. Le point rouge, c’est vous.';
-  var s = Math.min(W / (PLAN_X_MAX - PLAN_X_MIN), H / (PLAN_Z_MAX - PLAN_Z_MIN));
+  /* Marge intérieure du cadre (retour de Richard, 2026-11-01 : sur
+     écran étroit, le dessin et les étiquettes sortaient du cadre en
+     bas à gauche). L’ajustement réserve MARGE_PLAN pixels de chaque
+     côté : les bornes du monde ne collent plus aux bords du canevas,
+     et il reste la place des étiquettes — le rabattage dans
+     etiquette() fait le reste, texte par texte. */
+  var MARGE_PLAN = 14;
+  var s = Math.min((W - 2 * MARGE_PLAN) / (PLAN_X_MAX - PLAN_X_MIN), (H - 2 * MARGE_PLAN) / (PLAN_Z_MAX - PLAN_Z_MIN));
   var ox = (W - (PLAN_X_MAX - PLAN_X_MIN) * s) / 2;
   var oy = (H - (PLAN_Z_MAX - PLAN_Z_MIN) * s) / 2;
   function PX(x){ return ox + (x - PLAN_X_MIN) * s; }
@@ -6426,6 +6504,19 @@ function dessinerPlan(){
     ctx.textAlign = ancrage || 'left';
     ctx.textBaseline = 'middle';
     var tx = PX(x) + (dx || 0), ty = PY(z) + (dy || 0);
+    /* Rabattage des étiquettes : on mesure le texte et on le ramène
+       ENTIÈREMENT à l’intérieur du cadre (12 px, juste à l’intérieur
+       du double filet), en décalant son point d’ancrage — aucun
+       caractère tronqué ni masqué, à toute largeur d’écran, dans
+       les deux mondes. Verticalement, même garde : le centre du
+       texte reste à 12 px au moins des bords haut et bas. */
+    var largeurTexte = ctx.measureText(texte).width;
+    var anc = ancrage || 'left';
+    var bordGauche = anc === 'right' ? tx - largeurTexte : (anc === 'center' ? tx - largeurTexte / 2 : tx);
+    if (bordGauche < 12) tx += 12 - bordGauche;
+    else if (bordGauche + largeurTexte > W - 12) tx -= (bordGauche + largeurTexte) - (W - 12);
+    if (ty < 12) ty = 12;
+    if (ty > H - 12) ty = H - 12;
     ctx.lineWidth = 3.5; ctx.strokeStyle = 'rgba(247,237,211,.92)';
     ctx.strokeText(texte, tx, ty);
     ctx.fillStyle = '#3a2a16';
@@ -6466,12 +6557,19 @@ function dessinerPlan(){
   /* Le ruisseau, tracé par ses vrais échantillons — il coule dans
      les deux mondes */
   if (typeof echantillonsRuisseau !== 'undefined' && echantillonsRuisseau.length){
+    /* Les échantillons du ruisseau dépassent la fenêtre du plan
+       (x de −62 à +62, pour des bornes à ±58) : on rogne son tracé
+       au filet intérieur, pour qu’il s’arrête proprement au cadre
+       au lieu de le traverser. */
+    ctx.save();
+    ctx.beginPath(); ctx.rect(10.5, 10.5, W - 21, H - 21); ctx.clip();
     ctx.beginPath();
     for (var i = 0; i < echantillonsRuisseau.length; i++){
       var ptR = echantillonsRuisseau[i];
       if (i === 0) ctx.moveTo(PX(ptR.x), PY(ptR.z)); else ctx.lineTo(PX(ptR.x), PY(ptR.z));
     }
     ctx.strokeStyle = 'rgba(84,130,168,.7)'; ctx.lineWidth = Math.max(2, 1.1 * s); ctx.stroke();
+    ctx.restore();
   }
 
   /* Les arbres, en semis discret — leurs vraies positions (dans le
@@ -7528,12 +7626,12 @@ function actualiserBoutonsPosture(){
   if (bp){
     bp.classList.toggle('actif', posture === 'penche');
     bp.setAttribute('aria-pressed', String(posture === 'penche'));
-    bp.textContent = (posture === 'penche') ? 'Se relever' : 'Se pencher';
+    bp.setAttribute('aria-label', (posture === 'penche') ? 'Se relever' : 'Se pencher ou se relever');
   }
   if (ba){
     ba.classList.toggle('actif', posture === 'ramper');
     ba.setAttribute('aria-pressed', String(posture === 'ramper'));
-    ba.textContent = (posture === 'ramper') ? 'Se relever' : 'Ramper';
+    ba.setAttribute('aria-label', (posture === 'ramper') ? 'Se relever' : 'Ramper ou se relever');
   }
 }
 
@@ -9022,29 +9120,84 @@ document.getElementById('btn-partir').addEventListener('click', function(){
   }
 });
 
-/* ---------- Les montagnes bleutées — les Alpes avalées ----------
-   Un liseré de relief à l’horizon nord et nord-est, nouveau dans ce
-   monde plat : des cônes bas et larges, gris-bleu, que la brume du
-   préréglage Bruegel (brouillard proche, lointain long) voile jusqu’au
-   bleu pâle des arrière-plans de Bruegel. Hors du mode, ils n’existent
-   pas : l’horizon redevient celui de la vallée. */
+/* ---------- Les montagnes bleutées — des crêtes basses sur l’horizon ----------
+   REFAIT le 2026-11-01. Les anciennes montagnes — six cônes isolés,
+   très larges et plats (rayon 15 à 25, aplatis ×1,35, coiffés d’un
+   cône de « neige » pâle), posés sur le flanc intérieur des collines
+   à des distances et des hauteurs de terrain très différentes — se
+   lisaient en jeu comme d’ÉNORMES PARASOLS flottants au-dessus des
+   toits : leur large bord surplombait la pente qui redescend vers le
+   village, et le capuchon pâle formait un second disque en l’air.
+   Remplacées par de vraies CRÊTES : deux chaînes allongées et
+   irrégulières (sommets et cols enchaînés, silhouette dentelée douce),
+   assises SUR la crête des collines qui ferment la vallée, au nord et
+   au nord-est comme dans le panneau. Chaque chaîne est un ruban de
+   relief construit station par station : la ligne de faîte suit le
+   terrain, et ses deux versants descendent en jupe profonde (15 m
+   sous la faîte la plus basse) — le pied rencontre donc toujours la
+   pente, aucun bord ne peut flotter. Plus de capuchon pâle : un seul
+   bleu-gris par chaîne, la plus lointaine plus claire, et la brume du
+   préréglage Bruegel les mange par le bas et les fond dans le ciel
+   plombé verdâtre. Hors du mode, elles n’existent pas (groupeBruegel) :
+   l’horizon redevient celui de la vallée. */
 (function(){
-  var matMont = new THREE.MeshLambertMaterial({color:0x7e97a6});
-  var matMont2 = new THREE.MeshLambertMaterial({color:0x8ea6b2});
-  var matCap = new THREE.MeshLambertMaterial({color:0xd3dbd2});
-  [[30,-32,12,21],[48,-44,14,25],[8,-56,10,18],[66,-24,9,16],[-16,-62,13,22],[58,6,9,15]].forEach(function(m, i){
-    var g = new THREE.Group();
-    var base = new THREE.Mesh(new THREE.ConeGeometry(m[3], m[2], 7), (i % 2) ? matMont2 : matMont);
-    base.position.y = m[2] / 2;
-    g.add(base);
-    var cap = new THREE.Mesh(new THREE.ConeGeometry(m[3] * 0.4, m[2] * 0.38, 7), matCap);
-    cap.position.y = m[2] * 0.8;
-    g.add(cap);
-    g.position.set(m[0], hauteurTerrain(m[0], m[1]) - 4, m[1]);
-    g.rotation.y = hasard() * 3;
-    g.scale.x = 1.35;   /* des crêtes plus larges que hautes : un liseré, pas des pyramides */
-    groupeBruegel.add(g);
-  });
+  /* Construit la géométrie d’une crête : pts = stations de la faîte
+     [{x, y, z}] ; de chaque station, deux jupes descendent à yJupe,
+     à ±demiLarg de la faîte, perpendiculairement à sa direction. */
+  function geometrieCrete(pts, demiLarg, yJupe){
+    var pos = [], idx = [], n = pts.length;
+    for (var i = 0; i < n; i++){
+      var p = pts[i];
+      var pA = pts[Math.max(0, i - 1)], pB = pts[Math.min(n - 1, i + 1)];
+      var dx = pB.x - pA.x, dz = pB.z - pA.z;
+      var lg = Math.hypot(dx, dz) || 1; dx /= lg; dz /= lg;
+      pos.push(p.x, p.y, p.z);                                            /* la faîte */
+      pos.push(p.x + dz * demiLarg, yJupe, p.z - dx * demiLarg);          /* jupe d’un côté */
+      pos.push(p.x - dz * demiLarg, yJupe, p.z + dx * demiLarg);          /* jupe de l’autre */
+    }
+    for (var j = 0; j < n - 1; j++){
+      var a = j * 3, b = (j + 1) * 3;
+      idx.push(a, a + 1, b + 1, a, b + 1, b);        /* versant 1 */
+      idx.push(a, b + 2, a + 2, a, b, b + 2);        /* versant 2 */
+    }
+    idx.push(0, 2, 1);                               /* les deux bouts, fermés */
+    var d = (n - 1) * 3;
+    idx.push(d, d + 1, d + 2);
+    var g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setIndex(idx);
+    g.computeVertexNormals();
+    return g;
+  }
+  /* Une chaîne suit un arc de rayon donné (θ : 0 = nord, + vers l’est) ;
+     rel = hauteur de chaque station AU-DESSUS du terrain sous elle —
+     sommets et cols alternés, extrémités qui retombent dans la crête
+     des collines. La faîte épouse donc la ligne d’horizon réelle. */
+  function chaineDeCretes(rayon, thMin, thMax, rel, demiLarg, couleur){
+    var n = rel.length, pts = [], yMin = Infinity;
+    for (var i = 0; i < n; i++){
+      var th = thMin + (thMax - thMin) * i / (n - 1);
+      var x = Math.sin(th) * rayon, z = -Math.cos(th) * rayon;
+      var y = hauteurTerrain(x, z) + rel[i];
+      pts.push({x:x, y:y, z:z});
+      if (y < yMin) yMin = y;
+    }
+    var mat = new THREE.MeshLambertMaterial({color:couleur, side:THREE.DoubleSide});
+    var m = new THREE.Mesh(geometrieCrete(pts, demiLarg, yMin - 15), mat);
+    groupeBruegel.add(m);
+  }
+  /* La chaîne proche : du nord-ouest à l’est, en passant par le nord —
+     elle ferme l’horizon derrière le village, la ville lointaine et le
+     rocher, qui restent DEVANT elle, comme dans le panneau. */
+  chaineDeCretes(68, -1.00, 1.35,
+    [0.7, 3.2, 5.4, 3.0, 6.2, 3.8, 6.8, 3.4, 5.6, 2.7, 6.0, 4.2, 5.9, 3.1, 6.5, 3.9, 5.2, 2.5, 4.8, 3.3, 1.6, 0.6],
+    12, 0x7e97a6);
+  /* La chaîne lointaine, au nord seulement : un second plan de crêtes,
+     plus pâle, dont les sommets dépassent à peine la première — la
+     brume fait le reste. */
+  chaineDeCretes(74.5, -0.70, 0.80,
+    [0.5, 2.6, 4.8, 2.3, 5.6, 3.0, 5.2, 2.1, 4.4, 2.8, 3.8, 1.5, 0.5],
+    10, 0x96abb4);
 })();
 
 /* ---------- Les arbres nus de la pente — silhouettes sombres ----------
