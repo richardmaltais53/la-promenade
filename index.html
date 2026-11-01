@@ -580,6 +580,64 @@
     #panneau-intro{padding:18px 18px 6px;}
     #panneau-intro .cartel-texte{font-size:16px;}
   }
+
+  /* ---------- Paysage téléphone : les panneaux tiennent dans l’écran ----------
+     (retour de Richard, 2026-11-01 : en paysage, le bas des Réglages
+     était hors d’atteinte). Les panneaux Réglages et Intensité gagnent
+     une hauteur maximale qui tient toujours dans la fenêtre et un
+     défilement vertical interne, fluide au pouce ; leur en-tête — qui
+     porte le gros bouton × de 44 px — reste collée en haut pendant le
+     défilement, donc le × ne part jamais hors d’atteinte. En portrait,
+     où tout tient déjà, rien ne change : la hauteur maximale ne mord
+     que lorsque le contenu dépasse. Même en-tête collante pour les
+     cartels de l’accueil, qui défilaient déjà. */
+  .panneau-flottant, #panneau-meteo{
+    max-height:calc(100dvh - 80px - env(safe-area-inset-top));
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+  }
+  .entete-panneau{
+    position:sticky;top:0;z-index:5;
+    background:#1a1611;
+    box-shadow:0 8px 0 #1a1611;
+  }
+  #panneau-plaque .entete-cartel, #panneau-intro .entete-cartel{
+    position:sticky;top:0;z-index:5;
+    background:#fdf8ec;
+    box-shadow:0 14px 0 #fdf8ec;
+  }
+  /* Écrans courts (paysage téléphone) : on compacte un peu
+     l’espacement interne des panneaux pour montrer plus de boutons
+     d’un coup, sans passer les zones tactiles sous ~40 px. */
+  @media (max-height:480px){
+    .panneau-flottant, #panneau-meteo{padding:8px 12px 2px;}
+    .entete-panneau{margin-bottom:4px;box-shadow:0 4px 0 #1a1611;}
+    #panneau-reglages .btn-reglage{margin-bottom:6px;padding:8px 12px;min-height:43px;}
+    .ligne-meteo{margin-bottom:4px;}
+    .ligne-meteo input[type=range]{min-height:32px;}
+    /* Le plan : moins de marges internes, plus de place pour la carte.
+       Son en-tête (et son ×) est hors de la zone qui défile : il reste
+       toujours visible. */
+    #carte-plan{padding:8px 12px 6px;}
+    .entete-plan{padding-bottom:6px;margin-bottom:6px;}
+    .legende-plan{margin:5px 0 0;font-size:12px;line-height:1.3;}
+    #panneau-plaque .entete-cartel, #panneau-intro .entete-cartel{
+      padding-bottom:8px;margin-bottom:10px;box-shadow:0 10px 0 #fdf8ec;
+    }
+    /* La colonne de gauche (postures + manche du regard), ancrée en
+       bas, remontait jusque dans le bouton Vue : on la compacte —
+       légendes des manches masquées, tuiles resserrées (≥ 40 px) —
+       sans toucher à la taille des manches. À 390 px de haut :
+       3×40 + 2×6 (tuiles) + 6 (écart) + 148 (manche) = 286 px,
+       bas à 14 px du bord → le haut de « Sauter » arrive à ~90 px,
+       soit ~38 px sous le bas du bouton Vue (12 + 40). Aucun
+       chevauchement, chaque bouton se touche séparément. */
+    #manche-legende, #regard-legende{display:none;}
+    .colonne-gauche{gap:6px;}
+    #postures{gap:6px;}
+    .btn-posture{min-height:40px;padding:6px 10px;}
+  }
 </style>
 </head>
 <body>
@@ -631,6 +689,7 @@
     <button id="btn-plan" class="btn-reglage" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Voir le plan : la vue d’en haut, pour savoir où l’on est">Plan</button>
     <button id="btn-retour-debut" class="btn-reglage" type="button" aria-label="Revenir au début : le point de départ du monde où l’on se promène">Retour au début</button>
     <button id="btn-plein-ecran" class="btn-reglage" type="button" aria-pressed="false" aria-label="Passer en plein écran">Plein écran</button>
+    <button id="btn-retour-accueil" class="btn-reglage" type="button" aria-label="Quitter la promenade : couper le son, quitter le plein écran et revenir à l’accueil">Quitter la promenade</button>
   </div>
 
   <div id="panneau-meteo" hidden>
@@ -6663,6 +6722,57 @@ document.addEventListener('fullscreenchange', function(){
   } catch(e){}
 });
 actualiserBoutonPleinEcran();
+/* ============================================================
+   QUITTER LA PROMENADE — le bouton « tout fermer » de Richard
+   ============================================================
+   Demande de Richard : « je cherche comment sortir du jeu et je
+   trouve rien » — puis : pour arrêter le son, son seul moyen
+   était de fermer les onglets Chrome, ce qu’il trouve lourd.
+   Le bouton vit tout au bout des Réglages, après « Plein écran »
+   (aucun élément permanent nouveau à l’écran). Au toucher, dans
+   l’ordre : (1) le son se coupe IMMÉDIATEMENT — le contexte
+   audio se suspend, ce qui fige aussi les sons déjà programmés
+   à très court terme (cloche, oiseaux…) ; le réglage Son
+   (sonActif) n’est PAS modifié. (2) Le plein écran se quitte
+   s’il est actif. (3) La promenade se termine et l’écran
+   d’accueil revient, SANS recharger la page : tous les panneaux
+   se ferment, enPromenade passe à false, le promeneur revient
+   au point de départ du monde actif (exactement comme
+   « Retour au début »), debout, manches au repos, le HUD se
+   masque et le verrouillage du pointeur se libère. Le son ne
+   repart qu’en relançant une promenade par « Partir »
+   (demarrerSons() fait resume(), en respectant sonActif).
+   Et tous les réglages mémorisés restent intacts : saison,
+   météo et ses intensités, mode Bruegel, réglage du son —
+   rien n’est réinitialisé. Limite du navigateur, assumée :
+   une page web ne peut pas fermer l’onglet elle-même ; ce
+   bouton fait tout le reste. */
+var btnRetourAccueilEl = document.getElementById('btn-retour-accueil');
+if (btnRetourAccueilEl) btnRetourAccueilEl.addEventListener('click', function(){
+  try { if (audioCtx && audioCtx.state === 'running') audioCtx.suspend(); } catch(e){}
+  try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); } catch(e){}
+  fermerPanneauReglages();
+  fermerPanneauMeteo();
+  fermerPanneauPlan();
+  enPromenade = false;
+  if (planEstBruegel()){
+    allerPointDeVueArtiste(true);
+  } else {
+    joueur.x = 2; joueur.z = 27;
+    joueur.lacet = 0; joueur.tangage = -0.02;
+    directionSouhaitee = Math.PI;
+    posture = 'debout';
+    actualiserBoutonsPosture();
+    solJoueur = hauteurTerrain(joueur.x, joueur.z);
+  }
+  sautDecalage = 0; sautVitesse = 0; enSaut = false;
+  vitesseActuelle = 0;
+  manche.x = 0; manche.y = 0; manche.douxX = 0; manche.douxY = 0; manche.actif = false;
+  regard.x = 0; regard.y = 0; regard.douxX = 0; regard.douxY = 0; regard.actif = false;
+  try { if (document.pointerLockElement && document.exitPointerLock) document.exitPointerLock(); } catch(e){}
+  document.getElementById('hud').classList.remove('visible');
+  document.getElementById('accueil').style.display = '';
+});
 var btnFermerPlanEl = document.getElementById('btn-fermer-plan');
 if (btnFermerPlanEl) btnFermerPlanEl.addEventListener('click', fermerPanneauPlan);
 var panneauPlanEl = document.getElementById('panneau-plan');
@@ -7179,8 +7289,13 @@ function boucleCaquets(){
     boucleCaquets();
   }, delai);
 }
-/* La cloche de la petite église, de loin en loin : un ou deux coups doux,
-   très espacés, jamais insistants */
+/* La cloche de la petite église, de loin en loin : quand elle sonne,
+   c’est en petite série — « ling, ling, ling » — trois coups le plus
+   souvent, quatre parfois, rapprochés au rythme d’une vraie cloche de
+   village (environ une seconde entre les coups, très légèrement
+   variable d’un coup à l’autre). La résonance de chaque coup (~1,9 s)
+   chevauche le coup suivant, comme dans un vrai clocher. Puis le
+   silence revient pour longtemps (45 à 95 s), jamais insistant */
 function boucleCloche(){
   if (!audioCtx) return;
   var delai = 45000 + Math.random()*50000;
@@ -7188,9 +7303,11 @@ function boucleCloche(){
     if (audioCtx && sonActif){
       try {
         var t0 = audioCtx.currentTime;
-        var coups = Math.random() < 0.4 ? 2 : 1;
+        var coups = Math.random() < 0.3 ? 4 : 3;
+        var ecart = 0;
         for (var i=0;i<coups;i++){
-          var tt = t0 + i*2.1;
+          var tt = t0 + ecart;
+          ecart += 0.95 + Math.random()*0.15;
           [523.25, 1046.5].forEach(function(f, hi){
             var osc = audioCtx.createOscillator();
             var g = audioCtx.createGain();
@@ -7314,6 +7431,26 @@ btnSon.addEventListener('click', function(){
   if (gainGeneral && audioCtx){
     gainGeneral.gain.setTargetAtTime(sonActif ? 1 : 0, audioCtx.currentTime, 0.15);
   }
+});
+
+/* Le son se tait dès que le jeu passe en arrière-plan — changement
+   d’application, fermeture ou mise en veille de l’onglet : sans cela,
+   le contexte WebAudio continuerait de tourner et l’ambiance
+   resterait audible alors que le jeu n’est plus à l’écran. Au retour
+   au premier plan, le contexte ne reprend que si l’on est vraiment
+   en promenade et que le réglage Son est à « oui » : après un
+   « Quitter la promenade » (qui suspend le contexte et met
+   enPromenade = false), un aller-retour d’application ne doit pas
+   relancer le son sur l’écran d’accueil. */
+document.addEventListener('visibilitychange', function(){
+  if (document.hidden){
+    try { if (audioCtx && audioCtx.state === 'running') audioCtx.suspend(); } catch(e){}
+  } else {
+    try { if (audioCtx && audioCtx.state === 'suspended' && sonActif && enPromenade) audioCtx.resume(); } catch(e){}
+  }
+});
+window.addEventListener('pagehide', function(){
+  try { if (audioCtx && audioCtx.state === 'running') audioCtx.suspend(); } catch(e){}
 });
 
 /* ============================================================
